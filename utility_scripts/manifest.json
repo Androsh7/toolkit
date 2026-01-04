@@ -1,0 +1,10 @@
+[
+  {
+    "id": "win-powershell-get_strings",
+    "title": "Powershell: Get Strings",
+    "os": "windows",
+    "desc": "Finds all readable strings inside of a binary file, useful for analyzing executables",
+    "filename": "get_strings.ps1",
+    "type": "text/plain"
+  }
+]

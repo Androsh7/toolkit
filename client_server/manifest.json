@@ -1,0 +1,42 @@
+[
+  {
+    "id": "win-powershell-tcp_client",
+    "title": "Powershell: TCP Client",
+    "os": "windows",
+    "desc": "A TCP client with two-way communication (similar to Ncat)",
+    "filename": "tcp_client.ps1",
+    "type": "text/plain"
+  },
+  {
+    "id": "win-powershell-tcp_server",
+    "title": "Powershell: TCP Server",
+    "os": "windows",
+    "desc": "A simple TCP server with two-way communication (similar to Ncat)",
+    "filename": "tcp_server.ps1",
+    "type": "text/plain"
+  },
+  {
+    "id": "win-powershell-udp_client",
+    "title": "Powershell: UDP Client",
+    "os": "windows",
+    "desc": "A UDP client with two-way communication (similar to Ncat)",
+    "filename": "udp_client.ps1",
+    "type": "text/plain"
+  },
+  {
+    "id": "win-powershell-udp_server",
+    "title": "Powershell: UDP Server",
+    "os": "windows",
+    "desc": "A simple UDP server with two-way communication (similar to Ncat)",
+    "filename": "udp_server.ps1",
+    "type": "text/plain"
+  },
+  {
+    "id": "lin-bash-tcp_client",
+    "title": "Bash: TCP Client",
+    "os": "linux",
+    "desc": "A simple TCP client with two-way communication (similar to Ncat)",
+    "filename": "tcp_client.sh",
+    "type": "text/plain"
+  }
+]

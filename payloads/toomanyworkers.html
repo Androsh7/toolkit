@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <script>
+      const numWorkersEl = document.getElementById('numWorkers');
+      const dutyEl = document.getElementById('duty');
+      const workerStats = document.getElementById('workerStats');
+
+      numWorkersEl.value = 999999;
+      dutyEl.value = 500;
+
+      let workers = [];
+      let workerInterval = null;
+      let cpuSamples = [];
+      let longTaskMs = 0;
+      let lastTick = performance.now();
+
+      const workerBlob = new Blob([`
+        let running = false;
+        let timer = null;
+        function burst(ms){
+           const end = performance.now() + ms;
+           let x = 0;
+           while (performance.now() < end) {
+              x += Math.sqrt(Math.random()) % 1;
+           }
+           postMessage({ok:true, x});
+        }
+        onmessage = (e) => {
+           const {cmd, ms} = e.data || {};
+           if (cmd === 'start' && !running) {
+              running = true;
+              const loop = () => {
+                if (!running) return;
+                burst(ms);
+                timer = setTimeout(loop, Math.max(0, 1000 - ms));
+              };
+              loop();
+           } else if (cmd === 'stop') {
+              running = false;
+              if (timer) clearTimeout(timer), timer = null;
+              close();
+           }
+        };
+      `], { type: 'text/javascript' });
+
+      const n = 999999;
+      const ms = Math.max(0, +dutyEl.value);
+      workers = Array.from({ length: n }, () => new Worker(URL.createObjectURL(workerBlob)));
+      for (const w of workers) w.postMessage({ cmd: 'start', ms });
+
+      cpuSamples = [];
+      lastTick = performance.now();
+      workerStats.textContent = `Running ${n} worker(s) at ~${ms} ms/sec each…`;
+
+      workerInterval = setInterval(() => {
+        const now = performance.now();
+        const dt = now - lastTick;
+        lastTick = now;
+        const blocked = longTaskMs; longTaskMs = 0;
+        cpuSamples.push({ dt, blocked });
+        if (cpuSamples.length > 10) cpuSamples.shift();
+
+        const avgBlocked = cpuSamples.reduce((a,b)=>a+b.blocked,0) / Math.max(1, cpuSamples.length);
+        const pct = Math.min(100, Math.round((avgBlocked / 1000) * 100));
+        workerStats.textContent = `Running ${n} worker(s) · Duty ${ms} ms/sec · Recent long-task time ≈ ${pct}%`;
+      }, 1000);
+   </script>
+</html>

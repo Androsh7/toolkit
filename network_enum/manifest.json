@@ -1,0 +1,50 @@
+[
+  {
+    "id": "win-powershell-icmp_scanner",
+    "title": "Powershell: ICMP (Ping) Scanner",
+    "os": "windows",
+    "desc": "High speed ICMP scanner",
+    "filename": "icmp_scanner.ps1",
+    "type": "text/plain"
+  },
+  {
+    "id": "win-powershell-tcp_scanner",
+    "title": "PowerShell: TCP Scanner",
+    "os": "windows",
+    "desc": "High speed TCP scanner",
+    "filename": "tcp_scanner.ps1",
+    "type": "text/plain"
+  },
+  {
+    "id": "win-powershell-udp_scanner",
+    "title": "PowerShell: UDP Scanner",
+    "os": "windows",
+    "desc": "High speed UDP scanner",
+    "filename": "udp_scanner.ps1",
+    "type": "text/plain"
+  },
+  {
+    "id": "win-powershell-ad_lookup",
+    "title": "PowerShell: AD Lookup",
+    "os": "windows",
+    "desc": "A tool for performing Active Directory queries (requires the AD module in PowerShell)",
+    "filename": "ad_lookup.ps1",
+    "type": "text/plain"
+  },
+  {
+    "id": "lin-bash-ping_sweep",
+    "title": "Bash: Ping Sweep",
+    "os": "linux",
+    "desc": "Simple ping sweep command",
+    "filename": "ping_sweep.sh",
+    "type": "text/plain"
+  },
+  {
+    "id": "lin-bash-tcp_scanner",
+    "title": "Bash: TCP Scanner",
+    "os": "linux",
+    "desc": "Simple tcp scanner using /dev/tcp",
+    "filename": "tcp_scanner.sh",
+    "type": "text/plain"
+  }
+]

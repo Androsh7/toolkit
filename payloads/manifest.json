@@ -1,0 +1,74 @@
+[
+    {
+        "id": "win-batch-fork_bomb",
+        "title": "Batch: Fork Bomb",
+        "os": "windows",
+        "desc": "Creates exponentially more processes until the computer crashes",
+        "filename": "fork_bomb.bat",
+        "type": "text/plain"
+    },
+    {
+        "id": "win-powershell-memory_crash",
+        "title": "Powershell: Memory Crash",
+        "os": "windows",
+        "desc": "Doubles the size of a file until the disk fails or the disk fills up",
+        "filename": "mem_crash.ps1",
+        "type": "text/plain"
+    },
+    {
+        "id": "win-powershell-anti_enumeration",
+        "title": "Powershell: Anti-Enumeration",
+        "os": "windows",
+        "desc": "Prevents a user from opening files, starting/stopping processes, using terminals, and opening new apps",
+        "filename": "no_gui.ps1",
+        "type": "text/plain"
+    },
+    {
+        "id": "lin-bash-fork_bomb",
+        "title": "Bash: Fork Bomb",
+        "os": "linux",
+        "desc": "Creates exponentially more processes until the computer crashes",
+        "filename": "fork_bomb.sh",
+        "type": "text/plain"
+    },
+    {
+        "id": "lin-bash-memory_crash",
+        "title": "Bash: Memory Crash",
+        "os": "linux",
+        "desc": "Writes random data to a file until the disk fills up",
+        "filename": "mem_crash.sh",
+        "type": "text/plain"
+    },
+    {
+        "id": "web-html-dos_1",
+        "title": "HTML: Doubling Integer DOS",
+        "os": "web",
+        "desc": "Doubles an integer in the user\"s browser until the browser or computer crashes. NOTE: command is encoded in base64",
+        "filename": "doubleit.html",
+        "type": "text/plain"
+    },
+    {
+        "id": "web-html-dos_2",
+        "title": "HTML: Excessive Video Streaming DOS",
+        "os": "web",
+        "desc": "Attempts to load 30+ 4k videos at the same time until the browser or computer crashes. NOTE: may take longer to see effects on higher performance systems",
+        "filename": "watchme.html",
+        "type": "text/plain"
+    },
+    {
+        "id": "web-html-dos_3",
+        "title": "HTML: Worker Overload",
+        "os": "web",
+        "desc": "Starts creating workers (HTML5 only) to cause the browser crash",
+        "filename": "toomanyworkers.html",
+        "type": "text/plain"
+    },
+    {
+        "id": "web-html-dos_4",
+        "title": "HTML: Too Many Canvases",
+        "os": "web",
+        "desc": "Creates 4096x4096 canvases as fast as possible to overload system resources",
+        "filename": "infinitecanvas.html",
+        "type": "text/plain"
+    }
+]

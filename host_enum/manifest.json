@@ -1,0 +1,34 @@
+[
+  {
+    "id": "win-powershell-current_users",
+    "title": "Powershell: Show Current Users",
+    "os": "windows",
+    "desc": "Displays all currently logged in users (Requires admin if run if run in powershell 5 and below)",
+    "filename": "current_users.ps1",
+    "type": "text/plain"
+  },
+  {
+    "id": "win-powershell-all_users",
+    "title": "Powershell: Show All Users",
+    "os": "windows",
+    "desc": "Displays all users disabled/enabled (Some information may be hidden when not run as admin)",
+    "filename": "all_users.ps1",
+    "type": "text/plain"
+  },
+  {
+    "id": "win-powershell-system_info",
+    "title": "Powershell: System Info",
+    "os": "windows",
+    "desc": "Displays system information in notepad",
+    "filename": "system_info.ps1",
+    "type": "text/plain"
+  },
+  {
+    "id": "win-powershell-view_login",
+    "title": "Powershell: View Logins",
+    "os": "windows",
+    "desc": "Displays recent logins, password changes, and other relevant security events (requires administrator permissions)",
+    "filename": "view_login.ps1",
+    "type": "text/plain"
+  }
+]
