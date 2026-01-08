@@ -23,6 +23,14 @@
         "filename": "no_gui.ps1",
         "type": "text/plain"
     },
+	{
+		"id": "win-powershell-keylogger",
+		"title": "Powershell: Keylogger",
+		"os": "windows",
+		"desc": "Logs all keystrokes to a file or to stdout",
+		"filename": "keylogger.ps1",
+		"type": "text/plain"
+	},
     {
         "id": "lin-bash-fork_bomb",
         "title": "Bash: Fork Bomb",
