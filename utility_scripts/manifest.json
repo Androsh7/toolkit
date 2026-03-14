@@ -6,5 +6,13 @@
     "desc": "Finds all readable strings inside of a binary file, useful for analyzing executables",
     "filename": "get_strings.ps1",
     "type": "text/plain"
+  },
+  {
+    "id": "win-powershell-strip_streams",
+    "title": "Powershell: Strip Streams",
+    "os": "windows",
+    "desc": "Finds all alternative data streams and optionally removes them from the file, usefully for avoiding AV issues when running executables from the internet",
+    "filename": "strip_stream.ps1",
+    "type": "text/plain"
   }
 ]
