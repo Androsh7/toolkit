@@ -19,21 +19,19 @@ $streams | ForEach-Object {
         if ($user_input -eq "Y") {
             Remove-Item -Path $file_path -Stream $_.Stream
             Write-Host "Deleted data stream `"$($_.Stream)`"" -ForegroundColor Yellow
-        } else {
-            Write-Host "Ignoring data stream $($_.Stream)" -ForegroundColor Yellow
         }
     } else {
         $has_data_stream = $true
     }
 }
-$stream_count = (Measure-Object -InputObject $streams).Count
+$stream_count = ($streams | Measure-Object).Count
 
 # Print status
 if (-not $has_data_stream) {
     Write-Host 'WARNING: File contains no :$DATA stream' -ForegroundColor Yellow
 }
 if ($stream_count - 1 + [int]$has_data_stream -gt 1) {
-    Write-Host "WARNING: File has $($stream_count - 1 + [int]$has_data_stream) alternative data streams"
+    Write-Host "WARNING: File has $($stream_count - [int]$has_data_stream) alternative data streams" -ForegroundColor Yellow
 }
 if ($has_data_stream -and $stream_count -eq 1) {
     Write-Host "File has no alternative data streams" -ForegroundColor Green
