@@ -14,5 +14,13 @@
     "desc": "Finds all alternative data streams and optionally removes them from the file, usefully for avoiding AV issues when running executables from the internet",
     "filename": "strip_stream.ps1",
     "type": "text/plain"
+  },
+  {
+    "id": "win-powershell-encrypt_script",
+    "title": "Powershell: Encrypt/Decrypt File",
+    "os": "windows",
+    "desc": "Encrypts a file to a .encrypt file or decrypts it back using AES-256 with a password-derived key, useful for protecting sensitive files at rest",
+    "filename": "encrypt_script.ps1",
+    "type": "text/plain"
   }
 ]
