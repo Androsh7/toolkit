@@ -1,3 +1,4 @@
+Clear-Host
 $Host.UI.RawUI.WindowTitle = "View Login Events"
 
 # Check if user needs Administrator permissions

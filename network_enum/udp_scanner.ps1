@@ -1,3 +1,4 @@
+Clear-Host
 $Host.UI.RawUI.WindowTitle = "UDP_Scanner"
 
 $max_connections = 100 # increase to speed up scans (100 is default)

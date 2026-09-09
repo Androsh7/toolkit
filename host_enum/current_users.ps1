@@ -1,3 +1,4 @@
+Clear-Host
 $Host.UI.RawUI.WindowTitle = "View Current Users"
 
 # Verify user has administrator permissions (only when running in Powershell version 5.1)

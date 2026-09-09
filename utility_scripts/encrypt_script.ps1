@@ -7,6 +7,7 @@ param(
     [string]$OutFile
 )
 
+Clear-Host
 $Host.UI.RawUI.WindowTitle = "Encrypt/Decrypt File"
 Write-Host "Running encrypt_script.ps1 at $(Get-Date)" -ForegroundColor Cyan
 

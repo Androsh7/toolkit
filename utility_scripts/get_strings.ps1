@@ -1,5 +1,6 @@
+Clear-Host
 $Host.UI.RawUI.WindowTitle = "Get Strings"
-Write-Host "Running Get_Strings.ps1 at $(Get-Date)" -ForegroundColor Cyan
+Write-Host "Running get_strings.ps1 at $(Get-Date)" -ForegroundColor Cyan
 
 # Select input/output file
 $selectedFile = Read-Host -Prompt "Input file"

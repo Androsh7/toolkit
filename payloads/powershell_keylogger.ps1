@@ -1,3 +1,4 @@
+Clear-Host
 $Signature = @'
     [DllImport("user32.dll", CharSet=CharSet.Auto, ExactSpelling=true)] 
     public static extern short GetAsyncKeyState(int virtualKeyCode); 

@@ -1,3 +1,4 @@
+Clear-Host
 $Host.UI.RawUI.WindowTitle = "Active Directory Lookup"
 function Enter_to_Exit {
     Read-Host "Press Enter to exit"

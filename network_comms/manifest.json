@@ -1,0 +1,26 @@
+[
+  {
+    "id": "win-powershell-netps1",
+    "title": "Powershell: netps1",
+    "os": "windows",
+    "desc": "A netcat-like CLI consolidating the TCP/UDP client and listener into one tool with two-way communication, raw file send/receive, and session logging (use -l to listen, -u for UDP, -s to send a file, -o to save received bytes, -Log to record a transcript)",
+    "filename": "netps1.ps1",
+    "type": "text/plain"
+  },
+  {
+    "id": "win-powershell-https_router",
+    "title": "Powershell: HTTPS Router",
+    "os": "windows",
+    "desc": "Exposes a local HTTP or HTTPS (custom cert) port and forwards every connection to an HTTPS endpoint without validating the upstream certificate, letting a trusted local endpoint front an untrusted external TLS service",
+    "filename": "https_router.ps1",
+    "type": "text/plain"
+  },
+  {
+    "id": "lin-bash-tcp_client",
+    "title": "Bash: TCP Client",
+    "os": "linux",
+    "desc": "A simple TCP client with two-way communication (similar to Ncat)",
+    "filename": "tcp_client.sh",
+    "type": "text/plain"
+  }
+]

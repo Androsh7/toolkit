@@ -1,3 +1,4 @@
+Clear-Host
 $Host.UI.RawUI.WindowTitle = "Strip streams"
 
 # Get file path input
