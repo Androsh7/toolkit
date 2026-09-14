@@ -8,14 +8,6 @@
     "type": "text/plain"
   },
   {
-    "id": "win-powershell-https_router",
-    "title": "Powershell: HTTPS Router",
-    "os": "windows",
-    "desc": "Exposes a local HTTP or HTTPS (custom cert) port and forwards every connection to an HTTPS endpoint without validating the upstream certificate, letting a trusted local endpoint front an untrusted external TLS service",
-    "filename": "https_router.ps1",
-    "type": "text/plain"
-  },
-  {
     "id": "lin-bash-tcp_client",
     "title": "Bash: TCP Client",
     "os": "linux",
