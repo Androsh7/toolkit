@@ -93,7 +93,7 @@ else
         packet=$(printf "%${udp_packet_size_bytes}s" x)
         sent_count=0
         while :; do
-            printf '%s' "$packet" >&"$descriptor"
+            printf '%s' "$packet" >&"$descriptor" 2>/dev/null
             sent_count=$((sent_count + 1))
             if [ $((sent_count % udp_report_interval)) -eq 0 ]; then
                 echo "Worker: ${sent_count} packets sent"

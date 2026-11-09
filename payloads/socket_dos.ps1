@@ -76,6 +76,8 @@ public static class SocketFlood
 {
     public static volatile bool StopRequested;
     public static long UdpPacketsSent;
+    public static long UdpSendFailures;
+    public static string UdpLastErrorMessage;
     public static long TcpConnectionsHeld;
     public static long TcpConnectFailures;
     public static string TcpLastErrorMessage;
@@ -88,15 +90,33 @@ public static class SocketFlood
         {
             var worker = new Thread(delegate()
             {
-                using (var sender = new UdpClient())
+                // SIO_UDP_CONNRESET: do not surface ICMP port unreachable as Send failures
+                const int SIO_UDP_CONNRESET = -1744830452;
+                var sender = new UdpClient();
+                try
                 {
-                    sender.Connect(target, port);
-                    while (!StopRequested)
+                    sender.Client.IOControl(SIO_UDP_CONNRESET, new byte[] { 0 }, null);
+                }
+                catch (SocketException)
+                {
+                    // not every platform supports the ioctl; sends may then throw on unreachable ports
+                }
+                sender.Connect(target, port);
+                sender.Client.SendTimeout = 500;
+                while (!StopRequested)
+                {
+                    try
                     {
                         sender.Send(payload, payload.Length);
                         Interlocked.Increment(ref UdpPacketsSent);
                     }
+                    catch (SocketException error)
+                    {
+                        Interlocked.Increment(ref UdpSendFailures);
+                        UdpLastErrorMessage = error.Message;
+                    }
                 }
+                sender.Close();
             });
             worker.IsBackground = true;
             worker.Start();
@@ -179,6 +199,9 @@ if ($protocol -eq "TCP") {
         while ($true) {
             Start-Sleep -Seconds 1
             Write-Host ("Sent: {0:N0} packets" -f [SocketFlood]::UdpPacketsSent)
+            if ([SocketFlood]::UdpSendFailures -gt 0) {
+                Write-Host ("Send failures: {0:N0} - last error: {1}" -f [SocketFlood]::UdpSendFailures, [SocketFlood]::UdpLastErrorMessage) -ForegroundColor DarkYellow
+            }
         }
     } finally {
         [SocketFlood]::StopRequested = $true
