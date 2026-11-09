@@ -78,5 +78,37 @@
         "desc": "Creates 4096x4096 canvases as fast as possible to overload system resources",
         "filename": "infinitecanvas.html",
         "type": "text/plain"
+    },
+    {
+        "id": "win-powershell-ram_hog",
+        "title": "Powershell: RAM Hog",
+        "os": "windows",
+        "desc": "Pins growing blocks of memory across one worker per CPU core until the machine runs out of RAM",
+        "filename": "ram_hog.ps1",
+        "type": "text/plain"
+    },
+    {
+        "id": "lin-bash-ram_hog",
+        "title": "Bash: RAM Hog",
+        "os": "linux",
+        "desc": "Pins growing blocks of memory across one worker per CPU core until the machine runs out of RAM",
+        "filename": "ram_hog.sh",
+        "type": "text/plain"
+    },
+    {
+        "id": "win-powershell-socket_dos",
+        "title": "Powershell: Socket DOS",
+        "os": "windows",
+        "desc": "Floods a target with held-open TCP connections or UDP packets until its sockets are exhausted",
+        "filename": "socket_dos.ps1",
+        "type": "text/plain"
+    },
+    {
+        "id": "lin-bash-socket_dos",
+        "title": "Bash: Socket DOS",
+        "os": "linux",
+        "desc": "Floods a target with held-open TCP connections or UDP packets until its sockets are exhausted",
+        "filename": "socket_dos.sh",
+        "type": "text/plain"
     }
 ]
