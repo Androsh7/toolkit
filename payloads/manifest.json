@@ -83,7 +83,7 @@
         "id": "win-powershell-ram_hog",
         "title": "Powershell: RAM Hog",
         "os": "windows",
-        "desc": "Pins growing blocks of memory until the machine runs out of RAM",
+        "desc": "Pins growing blocks of memory across one worker per CPU core until the machine runs out of RAM",
         "filename": "ram_hog.ps1",
         "type": "text/plain"
     },
@@ -91,7 +91,7 @@
         "id": "lin-bash-ram_hog",
         "title": "Bash: RAM Hog",
         "os": "linux",
-        "desc": "Pins growing blocks of memory until the machine runs out of RAM",
+        "desc": "Pins growing blocks of memory across one worker per CPU core until the machine runs out of RAM",
         "filename": "ram_hog.sh",
         "type": "text/plain"
     },
