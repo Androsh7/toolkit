@@ -162,16 +162,19 @@ public static class SocketFlood
     }
 }
 "@
-try {
-    Add-Type -TypeDefinition $flood_source -Language CSharp
-} catch {
-    Write-Host "Compiler failed once ($($_.Exception.Message)); retrying..." -ForegroundColor DarkYellow
-    Start-Sleep -Seconds 1
+# a previous run in the same session leaves the type loaded; only compile when it is absent
+if (-not ('SocketFlood' -as [type])) {
     try {
         Add-Type -TypeDefinition $flood_source -Language CSharp
     } catch {
-        Write-Host "Compiler failed twice - the machine may be too low on memory to compile the flood engine" -ForegroundColor Red
-        return
+        Write-Host "Compiler failed once ($($_.Exception.Message)); retrying..." -ForegroundColor DarkYellow
+        Start-Sleep -Seconds 1
+        try {
+            Add-Type -TypeDefinition $flood_source -Language CSharp
+        } catch {
+            Write-Host "Compiler failed twice: $($_.Exception.Message)" -ForegroundColor Red
+            return
+        }
     }
 }
 
