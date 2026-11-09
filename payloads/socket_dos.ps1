@@ -7,13 +7,13 @@ $udp_packet_size_bytes = 1472
 
 $protocol = ""
 while ($protocol -ne "TCP" -and $protocol -ne "UDP") {
-    $answer = Read-Host -Prompt "Protocol - (T)CP or (U)DP?"
+    $answer = (Read-Host -Prompt "Protocol - (T)CP or (U)DP?").Trim().ToUpper()
     if ($answer -match '^(T|TCP)$') { $protocol = "TCP" }
     if ($answer -match '^(U|UDP)$') { $protocol = "UDP" }
 }
 
 # accept a bare host, host:port, or a full URL; scheme sets the default port
-$target_answer = Read-Host -Prompt "Target host or URL (example.com, https://example.com, 10.0.0.1:8080)"
+$target_answer = (Read-Host -Prompt "Target host or URL (example.com, https://example.com, 10.0.0.1:8080)").Trim()
 $port_hint = 0
 if ($target_answer -match '^(?<scheme>https?)://') {
     if ($Matches['scheme'] -eq 'https') { $port_hint = 443 } else { $port_hint = 80 }
